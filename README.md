@@ -1,4 +1,8 @@
-# container-registry-cli
+﻿# container-registry-cli
+
+[![CI](https://github.com/SanjaySundarMurthy/container-registry-cli/actions/workflows/ci.yml/badge.svg)](https://github.com/SanjaySundarMurthy/container-registry-cli/actions/workflows/ci.yml)
+[![Python](https://img.shields.io/pypi/pyversions/container-registry-cli)](https://pypi.org/project/container-registry-cli/)
+[![PyPI](https://img.shields.io/pypi/v/container-registry-cli)](https://pypi.org/project/container-registry-cli/)
 
 **Container image registry analyzer with cleanup policies and vulnerability scanning.**
 
@@ -16,7 +20,7 @@ Scan container registries, identify cleanup candidates based on tag policies, an
 ## Installation
 
 ```bash
-pip install -e .
+pip install container-registry-cli
 ```
 
 ## Quick Start
@@ -59,3 +63,50 @@ MIT
 ## Author
 
 **Sanjay S** — [GitHub](https://github.com/SanjaySundarMurthy)
+
+
+## 🐳 Docker
+
+Run without installing Python:
+
+```bash
+# Build the image
+docker build -t container-registry-cli .
+
+# Run
+docker run --rm container-registry-cli --help
+
+# Example with volume mount
+docker run --rm -v ${PWD}:/workspace container-registry-cli [command] /workspace
+```
+
+Or pull from the container registry:
+
+```bash
+docker pull ghcr.io/SanjaySundarMurthy/container-registry-cli:latest
+docker run --rm ghcr.io/SanjaySundarMurthy/container-registry-cli:latest --help
+```
+
+## 🤝 Contributing
+
+Contributions are welcome! Here's how:
+
+1. Fork the repository
+2. Create a feature branch: `git checkout -b feature/amazing-feature`
+3. Commit changes: `git commit -m 'Add amazing feature'`
+4. Push to branch: `git push origin feature/amazing-feature`
+5. Open a Pull Request
+
+Please ensure tests pass before submitting:
+
+```bash
+pip install container-registry-cli
+pytest -v
+ruff check .
+```
+
+## 🔗 Links
+
+- **PyPI**: [https://pypi.org/project/container-registry-cli/](https://pypi.org/project/container-registry-cli/)
+- **GitHub**: [https://github.com/SanjaySundarMurthy/container-registry-cli](https://github.com/SanjaySundarMurthy/container-registry-cli)
+- **Issues**: [https://github.com/SanjaySundarMurthy/container-registry-cli/issues](https://github.com/SanjaySundarMurthy/container-registry-cli/issues)
