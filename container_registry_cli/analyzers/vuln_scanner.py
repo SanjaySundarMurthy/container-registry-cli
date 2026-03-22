@@ -1,10 +1,8 @@
 """Vulnerability scanner — analyzes image vulnerabilities."""
 
-from ..models import (
-    Image, Vulnerability, VulnerabilitySeverity,
-)
 from dataclasses import dataclass, field
 
+from ..models import Image, VulnerabilitySeverity
 
 VULN_RULES = {
     "REG-001": "Image has critical vulnerabilities",
@@ -135,6 +133,16 @@ def scan_images(images: list[Image], size_threshold_mb: float = 500.0) -> Securi
                 rule_id="REG-009",
                 message="'latest' tag used in production",
                 severity=VulnerabilitySeverity.HIGH,
+                image=image.repository,
+            ))
+
+        # REG-005: Running as root
+        user_label = image.labels.get("user", "").lower()
+        if user_label in ("", "root", "0"):
+            issues.append(SecurityIssue(
+                rule_id="REG-005",
+                message="Image may run as root (no non-root USER configured)",
+                severity=VulnerabilitySeverity.MEDIUM,
                 image=image.repository,
             ))
 

@@ -1,12 +1,12 @@
 """Rich terminal reporter for registry analysis."""
 
 from rich.console import Console
-from rich.table import Table
 from rich.panel import Panel
+from rich.table import Table
 from rich.text import Text
 
-from ..models import RegistryReport, CleanupCandidate, PolicyAction, CleanupSeverity
-from ..analyzers.vuln_scanner import SecurityReport, VulnerabilitySeverity
+from ..analyzers.vuln_scanner import SecurityReport
+from ..models import CleanupCandidate, PolicyAction, RegistryReport
 
 console = Console()
 
@@ -24,15 +24,15 @@ def print_registry_report(report: RegistryReport) -> None:
     console.print()
     header = Text()
     header.append("Container Registry Analysis\n", style="bold")
-    header.append(f"Registry: ", style="dim")
+    header.append("Registry: ", style="dim")
     header.append(f"{report.registry_url or 'local'}\n", style="bold cyan")
-    header.append(f"Type: ", style="dim")
+    header.append("Type: ", style="dim")
     header.append(f"{report.registry_type.value}\n", style="bold")
-    header.append(f"Images: ", style="dim")
+    header.append("Images: ", style="dim")
     header.append(f"{report.image_count}  ", style="bold")
-    header.append(f"Tags: ", style="dim")
+    header.append("Tags: ", style="dim")
     header.append(f"{report.total_tags}  ", style="bold")
-    header.append(f"Vulns: ", style="dim")
+    header.append("Vulns: ", style="dim")
     vuln_color = "red" if report.total_vulns > 0 else "green"
     header.append(f"{report.total_vulns}", style=f"bold {vuln_color}")
 

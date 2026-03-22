@@ -1,11 +1,18 @@
 """Tests for analyzers."""
 
 from datetime import datetime, timedelta
-from container_registry_cli.analyzers.cleanup_engine import evaluate_cleanup, calculate_reclaimable_space
-from container_registry_cli.analyzers.vuln_scanner import scan_images, VULN_RULES, SecurityReport
+
+from container_registry_cli.analyzers.cleanup_engine import (
+    calculate_reclaimable_space,
+    evaluate_cleanup,
+)
+from container_registry_cli.analyzers.vuln_scanner import VULN_RULES, scan_images
 from container_registry_cli.models import (
-    Image, ImageTag, Vulnerability, PolicyConfig, CleanupRule,
-    VulnerabilitySeverity, TagStatus, PolicyAction,
+    CleanupRule,
+    Image,
+    ImageTag,
+    PolicyAction,
+    PolicyConfig,
 )
 
 
@@ -17,7 +24,12 @@ class TestCleanupEngine:
     def test_protected_tags_skipped(self):
         img = Image(
             repository="test/app",
-            tags=[ImageTag(name="latest", digest="sha256:x", created_at=datetime.now() - timedelta(days=200), size_bytes=100)],
+            tags=[ImageTag(
+                name="latest",
+                digest="sha256:x",
+                created_at=datetime.now() - timedelta(days=200),
+                size_bytes=100,
+            )],
         )
         policy = PolicyConfig(protected_tags=["latest"], global_max_age_days=90)
         candidates = evaluate_cleanup([img], policy)
@@ -26,7 +38,14 @@ class TestCleanupEngine:
     def test_dev_branch_cleanup(self, dev_tag):
         img = Image(repository="test/app", tags=[dev_tag])
         policy = PolicyConfig(
-            rules=[CleanupRule(name="dev", description="dev cleanup", delete_patterns=["dev-.*"], action=PolicyAction.DELETE)],
+            rules=[
+                CleanupRule(
+                    name="dev",
+                    description="dev cleanup",
+                    delete_patterns=["dev-.*"],
+                    action=PolicyAction.DELETE,
+                )
+            ],
             protected_tags=["latest"],
         )
         candidates = evaluate_cleanup([img], policy)
@@ -52,17 +71,54 @@ class TestVulnScanner:
         assert report.passed is True
 
     def test_no_scan_data_flagged(self):
-        img = Image(repository="test/noscan", tags=[
-            ImageTag(name="v1", digest="sha256:x", created_at=datetime.now(), size_bytes=100),
-        ])
+        img = Image(
+            repository="test/noscan",
+            tags=[ImageTag(
+                name="v1", digest="sha256:x", created_at=datetime.now(), size_bytes=100
+            )],
+            labels={"user": "appuser"},
+        )
         report = scan_images([img])
         rule_ids = {i.rule_id for i in report.issues}
         assert "REG-004" in rule_ids
 
+    def test_root_user_flagged(self):
+        img = Image(
+            repository="test/root",
+            tags=[ImageTag(
+                name="v1", digest="sha256:x", created_at=datetime.now(), size_bytes=100
+            )],
+            labels={"scanned": "true"},  # no 'user' label
+        )
+        report = scan_images([img])
+        rule_ids = {i.rule_id for i in report.issues}
+        assert "REG-005" in rule_ids
+
+    def test_non_root_user_not_flagged(self):
+        img = Image(
+            repository="test/nonroot",
+            tags=[ImageTag(
+                name="v1", digest="sha256:x", created_at=datetime.now(), size_bytes=100
+            )],
+            labels={"scanned": "true", "user": "appuser"},
+        )
+        report = scan_images([img])
+        rule_ids = {i.rule_id for i in report.issues}
+        assert "REG-005" not in rule_ids
+
     def test_stale_tags_flagged(self):
-        img = Image(repository="test/stale", tags=[
-            ImageTag(name="old", digest="sha256:x", created_at=datetime.now() - timedelta(days=200), size_bytes=100),
-        ], labels={"scanned": "true"})
+        img = Image(
+            repository="test/stale",
+            tags=[
+                ImageTag(
+                    name="old",
+                    digest="sha256:x",
+                    created_at=datetime.now() - timedelta(days=200),
+                    size_bytes=100,
+                )
+            ],
+            labels={"scanned": "true", "user": "appuser"},
+        )
         report = scan_images([img])
         rule_ids = {i.rule_id for i in report.issues}
         assert "REG-010" in rule_ids
@@ -70,8 +126,13 @@ class TestVulnScanner:
     def test_large_image_flagged(self):
         img = Image(
             repository="test/big",
-            tags=[ImageTag(name="v1", digest="sha256:x", created_at=datetime.now(), size_bytes=629145600)],
-            labels={"scanned": "true"},
+            tags=[ImageTag(
+                name="v1",
+                digest="sha256:x",
+                created_at=datetime.now(),
+                size_bytes=629_145_600,
+            )],
+            labels={"scanned": "true", "user": "appuser"},
         )
         report = scan_images([img], size_threshold_mb=500.0)
         rule_ids = {i.rule_id for i in report.issues}

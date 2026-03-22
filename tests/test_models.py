@@ -1,10 +1,16 @@
 """Tests for domain models."""
 
-from datetime import datetime, timedelta
 from container_registry_cli.models import (
-    Image, ImageTag, ImageLayer, Vulnerability, CleanupRule,
-    PolicyConfig, RegistryReport, VulnerabilitySeverity, TagStatus,
-    PolicyAction, CleanupCandidate, CleanupSeverity, RegistryType,
+    CleanupCandidate,
+    CleanupRule,
+    CleanupSeverity,
+    Image,
+    ImageLayer,
+    PolicyAction,
+    RegistryReport,
+    RegistryType,
+    Vulnerability,
+    VulnerabilitySeverity,
 )
 
 
@@ -13,7 +19,11 @@ class TestVulnerability:
         assert sample_vuln.is_fixable is True
 
     def test_not_fixable(self):
-        v = Vulnerability(cve_id="CVE-2024-0001", severity=VulnerabilitySeverity.MEDIUM, package="zlib")
+        v = Vulnerability(
+            cve_id="CVE-2024-0001",
+            severity=VulnerabilitySeverity.MEDIUM,
+            package="zlib",
+        )
         assert v.is_fixable is False
 
 
@@ -90,3 +100,23 @@ class TestRegistryReport:
         assert report.image_count == 0
         assert report.total_tags == 0
         assert report.cleanup_count == 0
+
+    def test_cleanup_count(self):
+        report = RegistryReport(
+            cleanup_candidates=[
+                CleanupCandidate(
+                    image="test/img",
+                    tag="old",
+                    reason="stale",
+                    action=PolicyAction.DELETE,
+                    size_mb=100.0,
+                    age_days=200,
+                    severity=CleanupSeverity.HIGH,
+                )
+            ]
+        )
+        assert report.cleanup_count == 1
+
+    def test_registry_type_enum(self):
+        from container_registry_cli.parser import detect_registry_type
+        assert detect_registry_type("myregistry.azurecr.io") == RegistryType.ACR

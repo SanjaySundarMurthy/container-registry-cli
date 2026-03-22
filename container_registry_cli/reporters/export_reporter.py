@@ -3,8 +3,8 @@
 import json
 from pathlib import Path
 
-from ..models import RegistryReport, CleanupCandidate
 from ..analyzers.vuln_scanner import SecurityReport
+from ..models import RegistryReport
 
 
 def export_json(report: RegistryReport, security: SecurityReport, output_path: str) -> str:
@@ -57,12 +57,9 @@ def export_json(report: RegistryReport, security: SecurityReport, output_path: s
             "reclaimable_mb": report.reclaimable_size_mb,
             "items": [
                 {
-                    "image": c.image,
-                    "tag": c.tag,
-                    "action": c.action.value,
-                    "reason": c.reason,
-                    "size_mb": c.size_mb,
-                    "age_days": c.age_days,
+                    "image": c.image, "tag": c.tag,
+                    "action": c.action.value, "reason": c.reason,
+                    "size_mb": c.size_mb, "age_days": c.age_days,
                 }
                 for c in report.cleanup_candidates
             ],
@@ -84,14 +81,15 @@ def export_html(report: RegistryReport, security: SecurityReport, output_path: s
     for img in report.images:
         crit = img.critical_vulns
         crit_color = "#dc3545" if crit > 0 else "#28a745"
-        images_html += f"""
-        <tr>
-            <td>{img.repository}</td>
-            <td>{img.tag_count}</td>
-            <td>{img.total_size_mb:.1f}</td>
-            <td>{len(img.vulnerabilities)}</td>
-            <td style="color:{crit_color};font-weight:bold">{crit}</td>
-        </tr>"""
+        images_html += (
+            "<tr>"
+            f"<td>{img.repository}</td>"
+            f"<td>{img.tag_count}</td>"
+            f"<td>{img.total_size_mb:.1f}</td>"
+            f"<td>{len(img.vulnerabilities)}</td>"
+            f'<td style="color:{crit_color};font-weight:bold">{crit}</td>'
+            "</tr>"
+        )
 
     html = f"""<!DOCTYPE html>
 <html lang="en">
@@ -99,11 +97,13 @@ def export_html(report: RegistryReport, security: SecurityReport, output_path: s
     <meta charset="UTF-8">
     <title>Container Registry Report</title>
     <style>
-        body {{ font-family: -apple-system, sans-serif; max-width: 960px; margin: 0 auto; padding: 20px; }}
+        body {{ font-family: -apple-system, sans-serif; max-width: 960px;
+               margin: 0 auto; padding: 20px; }}
         table {{ width: 100%; border-collapse: collapse; margin: 16px 0; }}
         th, td {{ border: 1px solid #dee2e6; padding: 8px; text-align: left; }}
         th {{ background: #f8f9fa; }}
-        .stats {{ display: grid; grid-template-columns: repeat(4, 1fr); gap: 12px; margin: 16px 0; }}
+        .stats {{ display: grid; grid-template-columns: repeat(4, 1fr);
+                  gap: 12px; margin: 16px 0; }}
         .stat {{ background: #f8f9fa; padding: 16px; border-radius: 4px; text-align: center; }}
         .stat-value {{ font-size: 2em; font-weight: bold; }}
     </style>
@@ -113,7 +113,8 @@ def export_html(report: RegistryReport, security: SecurityReport, output_path: s
     <div class="stats">
         <div class="stat"><div class="stat-value">{report.image_count}</div>Images</div>
         <div class="stat"><div class="stat-value">{report.total_tags}</div>Tags</div>
-        <div class="stat"><div class="stat-value">{report.total_size_mb:.0f} MB</div>Total Size</div>
+        <div class="stat"><div class="stat-value">{report.total_size_mb:.0f} MB</div>
+        Total Size</div>
         <div class="stat"><div class="stat-value">{report.total_vulns}</div>Vulnerabilities</div>
     </div>
     <h2>Images</h2>

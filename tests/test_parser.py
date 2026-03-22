@@ -1,10 +1,11 @@
 """Tests for parser module."""
 
-from pathlib import Path
+from container_registry_cli.models import PolicyAction, RegistryType
 from container_registry_cli.parser import (
-    parse_registry_manifest, parse_policy_config, detect_registry_type,
+    detect_registry_type,
+    parse_policy_config,
+    parse_registry_manifest,
 )
-from container_registry_cli.models import RegistryType, PolicyAction
 
 
 class TestParseRegistryManifest:

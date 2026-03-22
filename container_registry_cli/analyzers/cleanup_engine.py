@@ -1,11 +1,15 @@
 """Cleanup policy engine — evaluates images against cleanup rules."""
 
 import re
-from datetime import datetime
 
 from ..models import (
-    Image, ImageTag, CleanupRule, PolicyConfig, CleanupCandidate,
-    PolicyAction, CleanupSeverity, TagStatus,
+    CleanupCandidate,
+    CleanupSeverity,
+    Image,
+    ImageTag,
+    PolicyAction,
+    PolicyConfig,
+    TagStatus,
 )
 
 

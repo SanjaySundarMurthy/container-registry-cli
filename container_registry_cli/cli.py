@@ -1,16 +1,21 @@
 """CLI entry point for container-registry-cli."""
 
 import json
+
 import click
 from rich.console import Console
 
-from .parser import parse_registry_manifest, parse_policy_config, detect_registry_type
-from .analyzers.cleanup_engine import evaluate_cleanup, calculate_reclaimable_space
-from .analyzers.vuln_scanner import scan_images, VULN_RULES
-from .reporters.terminal_reporter import print_registry_report, print_cleanup_report, print_security_report
-from .reporters.export_reporter import export_json, export_html
+from .analyzers.cleanup_engine import calculate_reclaimable_space, evaluate_cleanup
+from .analyzers.vuln_scanner import VULN_RULES, scan_images
 from .demo import create_demo_project
-from .models import RegistryReport, PolicyConfig
+from .models import PolicyConfig, RegistryReport
+from .parser import detect_registry_type, parse_policy_config, parse_registry_manifest
+from .reporters.export_reporter import export_html, export_json
+from .reporters.terminal_reporter import (
+    print_cleanup_report,
+    print_registry_report,
+    print_security_report,
+)
 
 console = Console()
 
@@ -25,8 +30,12 @@ def main():
 @main.command()
 @click.argument("manifest")
 @click.option("--registry-url", default="", help="Registry URL")
-@click.option("--format", "fmt", type=click.Choice(["terminal", "json"]), default="terminal")
-@click.option("--output", "-o", default=None, help="Output file for JSON/HTML")
+@click.option(
+    "--format", "fmt",
+    type=click.Choice(["terminal", "json", "html"]),
+    default="terminal",
+)
+@click.option("--output", "-o", default=None, help="Output file for JSON/HTML export")
 def scan(manifest, registry_url, fmt, output):
     """Scan registry manifest and display image inventory."""
     images = parse_registry_manifest(manifest)
@@ -40,9 +49,43 @@ def scan(manifest, registry_url, fmt, output):
         total_size_mb=sum(i.total_size_mb for i in images),
     )
 
-    if fmt == "json" and output:
-        path = export_json(report, security, output)
-        console.print(f"[green]✓[/green] Exported report: {path}")
+    if fmt == "json":
+        if output:
+            path = export_json(report, security, output)
+            console.print(f"[green]✓[/green] Exported JSON report: {path}")
+        else:
+            data = {
+                "registry": {
+                    "url": report.registry_url,
+                    "type": report.registry_type.value,
+                    "images": report.image_count,
+                    "tags": report.total_tags,
+                    "total_size_mb": report.total_size_mb,
+                    "total_vulns": report.total_vulns,
+                },
+                "security": {
+                    "passed": security.passed,
+                    "images_scanned": security.images_scanned,
+                    "total_vulns": security.total_vulns,
+                    "fixable_vulns": security.fixable_vulns,
+                    "issues": [
+                        {
+                            "rule_id": i.rule_id,
+                            "severity": i.severity.value,
+                            "image": i.image,
+                            "message": i.message,
+                        }
+                        for i in security.issues
+                    ],
+                },
+            }
+            click.echo(json.dumps(data, indent=2))
+    elif fmt == "html":
+        if output:
+            path = export_html(report, security, output)
+            console.print(f"[green]✓[/green] Exported HTML report: {path}")
+        else:
+            console.print("[yellow]HTML format requires --output / -o <file.html>[/yellow]")
     else:
         print_registry_report(report)
         print_security_report(security)
@@ -99,7 +142,10 @@ def audit(manifest, fail_on, size_threshold, fmt):
             "total_vulns": report.total_vulns,
             "fixable_vulns": report.fixable_vulns,
             "issues": [
-                {"rule_id": i.rule_id, "severity": i.severity.value, "image": i.image, "message": i.message}
+                {
+                    "rule_id": i.rule_id, "severity": i.severity.value,
+                    "image": i.image, "message": i.message,
+                }
                 for i in report.issues
             ],
         }
@@ -108,7 +154,6 @@ def audit(manifest, fail_on, size_threshold, fmt):
         print_security_report(report)
 
     if fail_on:
-        from .models import VulnerabilitySeverity
         severity_order = ["critical", "high", "medium"]
         check_levels = severity_order[:severity_order.index(fail_on) + 1]
         has_issues = any(i.severity.value in check_levels for i in report.issues)
@@ -124,7 +169,10 @@ def demo(output_dir):
     console.print(f"[green]✓[/green] Created demo project: [bold]{path}[/bold]")
     console.print("\nTry these commands:")
     console.print(f"  container-registry-cli scan {path}/registry-manifest.yaml")
-    console.print(f"  container-registry-cli cleanup {path}/registry-manifest.yaml -p {path}/cleanup-policy.yaml")
+    console.print(
+        f"  container-registry-cli cleanup {path}/registry-manifest.yaml"
+        f" -p {path}/cleanup-policy.yaml"
+    )
     console.print(f"  container-registry-cli audit {path}/registry-manifest.yaml")
 
 

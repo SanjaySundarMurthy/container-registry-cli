@@ -1,10 +1,19 @@
 """Shared fixtures for container-registry-cli tests."""
 
-import pytest
 from datetime import datetime, timedelta
+
+import pytest
+
 from container_registry_cli.models import (
-    Image, ImageTag, ImageLayer, Vulnerability, CleanupRule,
-    PolicyConfig, VulnerabilitySeverity, TagStatus, PolicyAction,
+    CleanupRule,
+    Image,
+    ImageLayer,
+    ImageTag,
+    PolicyAction,
+    PolicyConfig,
+    TagStatus,
+    Vulnerability,
+    VulnerabilitySeverity,
 )
 
 
@@ -75,7 +84,7 @@ def clean_image():
             size_bytes=52428800,
         )],
         vulnerabilities=[],
-        labels={"team": "frontend", "scanned": "true"},
+        labels={"team": "frontend", "scanned": "true", "user": "appuser"},
     )
 
 
