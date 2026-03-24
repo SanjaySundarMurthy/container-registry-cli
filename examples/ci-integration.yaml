@@ -1,0 +1,111 @@
+# CI/CD Pipeline Integration Example
+# Example GitLab CI, GitHub Actions, and Azure Pipelines configurations
+
+# ============================================================================
+# GitHub Actions Example
+# ============================================================================
+# Save as: .github/workflows/registry-audit.yml
+
+# name: Registry Audit
+# on:
+#   schedule:
+#     - cron: '0 6 * * 1'  # Every Monday at 6 AM
+#   workflow_dispatch:
+#
+# jobs:
+#   audit:
+#     runs-on: ubuntu-latest
+#     steps:
+#       - uses: actions/checkout@v4
+#
+#       - name: Set up Python
+#         uses: actions/setup-python@v5
+#         with:
+#           python-version: '3.12'
+#
+#       - name: Install container-registry-cli
+#         run: pip install container-registry-cli
+#
+#       - name: Run security audit
+#         run: |
+#           container-registry-cli audit registry-manifest.yaml \
+#             --fail-on critical \
+#             --format json -o audit-report.json
+#
+#       - name: Upload audit report
+#         uses: actions/upload-artifact@v4
+#         with:
+#           name: audit-report
+#           path: audit-report.json
+
+# ============================================================================
+# GitLab CI Example
+# ============================================================================
+# Save in: .gitlab-ci.yml
+
+# registry-audit:
+#   image: python:3.12-slim
+#   stage: test
+#   script:
+#     - pip install container-registry-cli
+#     - container-registry-cli audit registry-manifest.yaml --fail-on high
+#   only:
+#     - merge_requests
+#     - main
+
+# ============================================================================
+# Azure Pipelines Example
+# ============================================================================
+# Save as: azure-pipelines.yml
+
+# trigger:
+#   - main
+#
+# pool:
+#   vmImage: 'ubuntu-latest'
+#
+# steps:
+#   - task: UsePythonVersion@0
+#     inputs:
+#       versionSpec: '3.12'
+#
+#   - script: pip install container-registry-cli
+#     displayName: 'Install CLI'
+#
+#   - script: container-registry-cli audit $(Build.SourcesDirectory)/registry-manifest.yaml --fail-on critical
+#     displayName: 'Security Audit'
+
+# ============================================================================
+# Shell Script Example
+# ============================================================================
+# Save as: scripts/weekly-audit.sh
+
+#!/bin/bash
+# Weekly registry audit script
+
+set -e
+
+MANIFEST_FILE="${1:-registry-manifest.yaml}"
+POLICY_FILE="${2:-cleanup-policy.yaml}"
+OUTPUT_DIR="${3:-reports}"
+
+mkdir -p "$OUTPUT_DIR"
+DATE=$(date +%Y-%m-%d)
+
+echo "=== Container Registry Audit: $DATE ==="
+
+# Generate full scan report
+container-registry-cli scan "$MANIFEST_FILE" --format json -o "$OUTPUT_DIR/scan-$DATE.json"
+echo "✓ Scan report: $OUTPUT_DIR/scan-$DATE.json"
+
+# Generate HTML report for stakeholders
+container-registry-cli scan "$MANIFEST_FILE" --format html -o "$OUTPUT_DIR/scan-$DATE.html"
+echo "✓ HTML report: $OUTPUT_DIR/scan-$DATE.html"
+
+# Cleanup analysis
+container-registry-cli cleanup "$MANIFEST_FILE" -p "$POLICY_FILE" --format json > "$OUTPUT_DIR/cleanup-$DATE.json"
+echo "✓ Cleanup report: $OUTPUT_DIR/cleanup-$DATE.json"
+
+# Security audit with exit code for CI
+container-registry-cli audit "$MANIFEST_FILE" --fail-on high --format json > "$OUTPUT_DIR/audit-$DATE.json"
+echo "✓ Security audit passed!"

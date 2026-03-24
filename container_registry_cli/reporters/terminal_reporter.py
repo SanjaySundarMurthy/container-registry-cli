@@ -65,12 +65,14 @@ def print_registry_report(report: RegistryReport) -> None:
 def print_cleanup_report(candidates: list[CleanupCandidate], reclaimable_mb: float) -> None:
     """Print cleanup candidates."""
     console.print()
-    console.print(Panel(
-        f"Cleanup Candidates: {len(candidates)}\n"
-        f"Reclaimable Space: [bold]{reclaimable_mb:.1f} MB[/bold]",
-        title="[bold]Cleanup Analysis[/bold]",
-        border_style="yellow",
-    ))
+    console.print(
+        Panel(
+            f"Cleanup Candidates: {len(candidates)}\n"
+            f"Reclaimable Space: [bold]{reclaimable_mb:.1f} MB[/bold]",
+            title="[bold]Cleanup Analysis[/bold]",
+            border_style="yellow",
+        )
+    )
 
     if not candidates:
         console.print("[green]No cleanup candidates found.[/green]")
@@ -109,14 +111,16 @@ def print_security_report(report: SecurityReport) -> None:
     """Print security scan results."""
     console.print()
     status = "[green]✓ PASSED[/green]" if report.passed else "[red]✗ FAILED[/red]"
-    console.print(Panel(
-        f"Status: {status}\n"
-        f"Images Scanned: {report.images_scanned}\n"
-        f"Total Vulnerabilities: {report.total_vulns}\n"
-        f"Fixable: {report.fixable_vulns}",
-        title="[bold]Security Report[/bold]",
-        border_style="red" if not report.passed else "green",
-    ))
+    console.print(
+        Panel(
+            f"Status: {status}\n"
+            f"Images Scanned: {report.images_scanned}\n"
+            f"Total Vulnerabilities: {report.total_vulns}\n"
+            f"Fixable: {report.fixable_vulns}",
+            title="[bold]Security Report[/bold]",
+            border_style="red" if not report.passed else "green",
+        )
+    )
 
     if not report.issues:
         return

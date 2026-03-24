@@ -1,0 +1,14 @@
+# Simple Registry Manifest
+# Minimal example for a single image with one tag
+
+images:
+  - repository: myapp/api
+    tags:
+      - name: v1.0.0
+        digest: sha256:abc123def456
+        created_at: 30  # days ago
+        size_bytes: 104857600  # 100 MB
+    vulnerabilities: []
+    labels:
+      team: backend
+      user: appuser

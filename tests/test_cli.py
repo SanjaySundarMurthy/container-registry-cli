@@ -53,8 +53,10 @@ class TestCleanupCommand:
         result = runner.invoke(
             main,
             [
-                "cleanup", f"{demo_dir}/registry-manifest.yaml",
-                "-p", f"{demo_dir}/cleanup-policy.yaml",
+                "cleanup",
+                f"{demo_dir}/registry-manifest.yaml",
+                "-p",
+                f"{demo_dir}/cleanup-policy.yaml",
             ],
         )
         assert result.exit_code == 0
@@ -105,4 +107,4 @@ class TestVersion:
     def test_version(self):
         result = runner.invoke(main, ["--version"])
         assert result.exit_code == 0
-        assert "1.0.0" in result.output
+        assert "1.1.0" in result.output

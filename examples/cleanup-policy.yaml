@@ -1,0 +1,60 @@
+# Cleanup Policy Example
+# Configures tag retention rules for automated cleanup
+
+# Global settings applied to all images
+global_max_age_days: 90        # Tags older than 90 days are candidates
+global_max_tags_per_repo: 10   # Keep at most 10 tags per repository
+
+# Tags matching these patterns are never deleted
+protected_tags:
+  - "latest"
+  - "stable"
+  - "production"
+  - "v\\d+\\.\\d+\\.\\d+"  # Semver tags (v1.0.0, v2.3.1, etc.)
+
+# Cleanup rules evaluated in order
+rules:
+  # Rule 1: Aggressively clean development branches
+  - name: dev-branch-cleanup
+    description: Remove development and feature branch tags older than 14 days
+    max_age_days: 14
+    delete_patterns:
+      - "dev-.*"
+      - "feature-.*"
+      - "feat-.*"
+      - "hotfix-.*"
+      - "fix-.*"
+      - "bugfix-.*"
+    action: delete  # Immediately delete matching tags
+
+  # Rule 2: Archive old release candidates
+  - name: rc-archive
+    description: Archive release candidates older than 30 days
+    max_age_days: 30
+    delete_patterns:
+      - ".*-rc\\d+"
+      - ".*-beta.*"
+      - ".*-alpha.*"
+    action: archive  # Mark for archival
+
+  # Rule 3: Warn about old releases
+  - name: old-releases
+    description: Warn about releases older than 180 days
+    max_age_days: 180
+    action: warn  # Generate warning but don't delete
+
+  # Rule 4: Clean untagged manifests
+  - name: untagged-cleanup
+    description: Remove untagged image manifests
+    delete_patterns:
+      - "sha256:.*"
+      - ""  # Empty tag names
+    action: delete
+
+  # Rule 5: Skip certain tags
+  - name: preserve-audit
+    description: Preserve audit-tagged images
+    keep_patterns:
+      - "audit-.*"
+      - "compliance-.*"
+    action: skip  # Explicitly skip matching tags

@@ -21,7 +21,7 @@ console = Console()
 
 
 @click.group()
-@click.version_option(version="1.0.0", prog_name="container-registry-cli")
+@click.version_option(version="1.1.0", prog_name="container-registry-cli")
 def main():
     """Container image registry analyzer with cleanup policies and vulnerability scanning."""
     pass
@@ -31,7 +31,8 @@ def main():
 @click.argument("manifest")
 @click.option("--registry-url", default="", help="Registry URL")
 @click.option(
-    "--format", "fmt",
+    "--format",
+    "fmt",
     type=click.Choice(["terminal", "json", "html"]),
     default="terminal",
 )
@@ -100,10 +101,7 @@ def cleanup(manifest, policy, max_age, fmt):
     """Analyze images for cleanup candidates based on policy."""
     images = parse_registry_manifest(manifest)
 
-    if policy:
-        config = parse_policy_config(policy)
-    else:
-        config = PolicyConfig(global_max_age_days=max_age)
+    config = parse_policy_config(policy) if policy else PolicyConfig(global_max_age_days=max_age)
 
     candidates = evaluate_cleanup(images, config)
     reclaimable = calculate_reclaimable_space(candidates)
@@ -114,8 +112,12 @@ def cleanup(manifest, policy, max_age, fmt):
             "reclaimable_mb": reclaimable,
             "items": [
                 {
-                    "image": c.image, "tag": c.tag, "action": c.action.value,
-                    "reason": c.reason, "size_mb": c.size_mb, "age_days": c.age_days,
+                    "image": c.image,
+                    "tag": c.tag,
+                    "action": c.action.value,
+                    "reason": c.reason,
+                    "size_mb": c.size_mb,
+                    "age_days": c.age_days,
                 }
                 for c in candidates
             ],
@@ -143,8 +145,10 @@ def audit(manifest, fail_on, size_threshold, fmt):
             "fixable_vulns": report.fixable_vulns,
             "issues": [
                 {
-                    "rule_id": i.rule_id, "severity": i.severity.value,
-                    "image": i.image, "message": i.message,
+                    "rule_id": i.rule_id,
+                    "severity": i.severity.value,
+                    "image": i.image,
+                    "message": i.message,
                 }
                 for i in report.issues
             ],
@@ -155,7 +159,7 @@ def audit(manifest, fail_on, size_threshold, fmt):
 
     if fail_on:
         severity_order = ["critical", "high", "medium"]
-        check_levels = severity_order[:severity_order.index(fail_on) + 1]
+        check_levels = severity_order[: severity_order.index(fail_on) + 1]
         has_issues = any(i.severity.value in check_levels for i in report.issues)
         if has_issues:
             raise SystemExit(1)
@@ -180,6 +184,7 @@ def demo(output_dir):
 def rules():
     """List all security audit rules."""
     from rich.table import Table
+
     table = Table(title="Security Audit Rules", show_lines=True)
     table.add_column("Rule ID", style="bold")
     table.add_column("Description")

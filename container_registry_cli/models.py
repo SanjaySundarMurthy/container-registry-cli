@@ -137,19 +137,15 @@ class CleanupRule:
 
     def matches_tag(self, tag: ImageTag) -> bool:
         import re
+
         if self.max_age_days > 0 and tag.age_days > self.max_age_days:
             return True
-        for pattern in self.delete_patterns:
-            if re.match(pattern, tag.name):
-                return True
-        return False
+        return any(re.match(pattern, tag.name) for pattern in self.delete_patterns)
 
     def is_protected(self, tag: ImageTag) -> bool:
         import re
-        for pattern in self.keep_patterns:
-            if re.match(pattern, tag.name):
-                return True
-        return False
+
+        return any(re.match(pattern, tag.name) for pattern in self.keep_patterns)
 
 
 @dataclass

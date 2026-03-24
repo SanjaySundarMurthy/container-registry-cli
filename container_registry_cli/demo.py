@@ -43,12 +43,17 @@ def create_demo_project(output_dir: str = "demo-registry") -> str:
                     _vuln("CVE-2024-9012", "medium", "zlib", "1.2.11"),
                 ],
                 "layers": [
-                    {"digest": "sha256:l1", "size_bytes": 52_428_800,
-                     "command": "FROM ubuntu:22.04"},
-                    {"digest": "sha256:l2", "size_bytes": 31_457_280,
-                     "command": "RUN apt-get update"},
-                    {"digest": "sha256:l3", "size_bytes": 73_400_320,
-                     "command": "COPY . /app"},
+                    {
+                        "digest": "sha256:l1",
+                        "size_bytes": 52_428_800,
+                        "command": "FROM ubuntu:22.04",
+                    },
+                    {
+                        "digest": "sha256:l2",
+                        "size_bytes": 31_457_280,
+                        "command": "RUN apt-get update",
+                    },
+                    {"digest": "sha256:l3", "size_bytes": 73_400_320, "command": "COPY . /app"},
                 ],
                 "labels": {"environment": "production", "team": "backend"},
             },
