@@ -1,10 +1,12 @@
 ﻿# container-registry-cli
 
 [![CI](https://github.com/SanjaySundarMurthy/container-registry-cli/actions/workflows/ci.yml/badge.svg)](https://github.com/SanjaySundarMurthy/container-registry-cli/actions/workflows/ci.yml)
+[![codecov](https://codecov.io/gh/SanjaySundarMurthy/container-registry-cli/branch/main/graph/badge.svg)](https://codecov.io/gh/SanjaySundarMurthy/container-registry-cli)
 [![PyPI](https://img.shields.io/pypi/v/container-registry-cli)](https://pypi.org/project/container-registry-cli/)
 [![Python](https://img.shields.io/pypi/pyversions/container-registry-cli)](https://pypi.org/project/container-registry-cli/)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)
 [![Ruff](https://img.shields.io/endpoint?url=https://raw.githubusercontent.com/astral-sh/ruff/main/assets/badge/v2.json)](https://github.com/astral-sh/ruff)
+[![Code style: typed](https://img.shields.io/badge/code%20style-typed-blue.svg)](https://peps.python.org/pep-0561/)
 
 **Container image registry analyzer with cleanup policies, vulnerability scanning, and multi-format reporting — all from YAML manifests.**
 
@@ -288,25 +290,102 @@ The `--fail-on` flag maps severity levels inclusively:
 - `--fail-on high` → fail on critical + high
 - `--fail-on medium` → fail on critical + high + medium
 
+See [`examples/ci-integration.yaml`](examples/ci-integration.yaml) for GitHub Actions, GitLab CI, and Azure Pipelines examples.
+
+---
+
+## Architecture
+
+```
+┌─────────────────────────────────────────────────────────────────┐
+│                           CLI Layer                              │
+│  ┌─────────┐ ┌─────────┐ ┌─────────┐ ┌─────────┐ ┌─────────┐    │
+│  │  scan   │ │ cleanup │ │  audit  │ │  demo   │ │  rules  │    │
+│  └────┬────┘ └────┬────┘ └────┬────┘ └────┬────┘ └────┬────┘    │
+└───────┼──────────┼──────────┼──────────┼──────────┼─────────────┘
+        │          │          │          │          │
+        ▼          ▼          ▼          ▼          ▼
+┌─────────────────────────────────────────────────────────────────┐
+│                        Parser Layer                              │
+│  ┌────────────────────┐  ┌────────────────────┐                  │
+│  │ parse_registry_    │  │ parse_policy_      │                  │
+│  │ manifest()         │  │ config()           │                  │
+│  └─────────┬──────────┘  └─────────┬──────────┘                  │
+└────────────┼───────────────────────┼────────────────────────────┘
+             │                       │
+             ▼                       ▼
+┌─────────────────────────────────────────────────────────────────┐
+│                        Domain Models                             │
+│  Image, ImageTag, Vulnerability, PolicyConfig, CleanupRule, ...  │
+└─────────────────────────────────────────────────────────────────┘
+             │                       │
+             ▼                       ▼
+┌─────────────────────────────────────────────────────────────────┐
+│                       Analyzer Layer                             │
+│  ┌────────────────────┐  ┌────────────────────┐                  │
+│  │ vuln_scanner.py    │  │ cleanup_engine.py  │                  │
+│  │ 10 security rules  │  │ Policy evaluation  │                  │
+│  └─────────┬──────────┘  └─────────┬──────────┘                  │
+└────────────┼───────────────────────┼────────────────────────────┘
+             │                       │
+             ▼                       ▼
+┌─────────────────────────────────────────────────────────────────┐
+│                       Reporter Layer                             │
+│  ┌────────────────────┐  ┌────────────────────┐                  │
+│  │ terminal_reporter  │  │ export_reporter    │                  │
+│  │ Rich tables/panels │  │ JSON & HTML export │                  │
+│  └────────────────────┘  └────────────────────┘                  │
+└─────────────────────────────────────────────────────────────────┘
+```
+
+---
+
+## Development
+
+```bash
+# Clone and setup
+git clone https://github.com/SanjaySundarMurthy/container-registry-cli.git
+cd container-registry-cli
+pip install -e ".[dev]"
+
+# Run tests with coverage
+pytest --cov=container_registry_cli --cov-report=term-missing
+
+# Lint and format
+ruff check .
+ruff format .
+
+# Type checking
+mypy container_registry_cli/
+
+# Using Makefile (Linux/macOS)
+make dev        # Install in dev mode
+make test       # Run tests
+make coverage   # Run with coverage
+make lint       # Lint check
+make all        # lint + typecheck + test
+```
+
+See [CONTRIBUTING.md](CONTRIBUTING.md) for detailed development guidelines.
+
 ---
 
 ## Contributing
 
-Contributions are welcome!
+Contributions are welcome! Please read our [Contributing Guide](CONTRIBUTING.md) and [Code of Conduct](CODE_OF_CONDUCT.md).
 
 1. Fork the repository
-2. Create a feature branch: `git checkout -b feature/amazing-feature`
-3. Commit your changes: `git commit -m 'Add amazing feature'`
-4. Push: `git push origin feature/amazing-feature`
-5. Open a Pull Request
+2. Create a feature branch: `git checkout -b feat/amazing-feature`
+3. Make your changes and add tests
+4. Ensure all checks pass: `make all`
+5. Commit with conventional commit format
+6. Push and open a Pull Request
 
-Ensure tests pass and lint is clean before submitting:
+---
 
-```bash
-pip install -e ".[dev]"
-pytest -v
-ruff check .
-```
+## Security
+
+For security vulnerabilities, please see [SECURITY.md](SECURITY.md).
 
 ---
 
@@ -315,13 +394,14 @@ ruff check .
 - **PyPI**: [https://pypi.org/project/container-registry-cli/](https://pypi.org/project/container-registry-cli/)
 - **GitHub**: [https://github.com/SanjaySundarMurthy/container-registry-cli](https://github.com/SanjaySundarMurthy/container-registry-cli)
 - **Issues**: [https://github.com/SanjaySundarMurthy/container-registry-cli/issues](https://github.com/SanjaySundarMurthy/container-registry-cli/issues)
+- **Changelog**: [CHANGELOG.md](CHANGELOG.md)
 
 ---
 
 ## Author
 
-**Sanjay S** — [GitHub](https://github.com/SanjaySundarMurthy)
+**Sanjay Sundar Murthy** — [GitHub](https://github.com/SanjaySundarMurthy)
 
 ## License
 
-MIT
+MIT — see [LICENSE](LICENSE) for details.

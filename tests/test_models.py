@@ -119,4 +119,5 @@ class TestRegistryReport:
 
     def test_registry_type_enum(self):
         from container_registry_cli.parser import detect_registry_type
+
         assert detect_registry_type("myregistry.azurecr.io") == RegistryType.ACR

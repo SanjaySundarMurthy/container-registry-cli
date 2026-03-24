@@ -27,15 +27,17 @@ def evaluate_cleanup(images: list[Image], policy: PolicyConfig) -> list[CleanupC
                     continue
                 if rule.matches_tag(tag):
                     severity = _calculate_severity(tag, image)
-                    candidates.append(CleanupCandidate(
-                        image=image.repository,
-                        tag=tag.name,
-                        reason=f"Rule '{rule.name}': {rule.description}",
-                        action=rule.action,
-                        size_mb=tag.size_mb,
-                        age_days=tag.age_days,
-                        severity=severity,
-                    ))
+                    candidates.append(
+                        CleanupCandidate(
+                            image=image.repository,
+                            tag=tag.name,
+                            reason=f"Rule '{rule.name}': {rule.description}",
+                            action=rule.action,
+                            size_mb=tag.size_mb,
+                            age_days=tag.age_days,
+                            severity=severity,
+                        )
+                    )
 
         # Global age check
         for tag in image.tags:
@@ -44,15 +46,17 @@ def evaluate_cleanup(images: list[Image], policy: PolicyConfig) -> list[CleanupC
             if tag.age_days > policy.global_max_age_days:
                 already = any(c.image == image.repository and c.tag == tag.name for c in candidates)
                 if not already:
-                    candidates.append(CleanupCandidate(
-                        image=image.repository,
-                        tag=tag.name,
-                        reason=f"Exceeds global max age ({policy.global_max_age_days} days)",
-                        action=PolicyAction.WARN,
-                        size_mb=tag.size_mb,
-                        age_days=tag.age_days,
-                        severity=CleanupSeverity.MEDIUM,
-                    ))
+                    candidates.append(
+                        CleanupCandidate(
+                            image=image.repository,
+                            tag=tag.name,
+                            reason=f"Exceeds global max age ({policy.global_max_age_days} days)",
+                            action=PolicyAction.WARN,
+                            size_mb=tag.size_mb,
+                            age_days=tag.age_days,
+                            severity=CleanupSeverity.MEDIUM,
+                        )
+                    )
 
         # Global max tags check
         if len(image.tags) > policy.global_max_tags_per_repo:
@@ -63,25 +67,24 @@ def evaluate_cleanup(images: list[Image], policy: PolicyConfig) -> list[CleanupC
                     continue
                 already = any(c.image == image.repository and c.tag == tag.name for c in candidates)
                 if not already:
-                    candidates.append(CleanupCandidate(
-                        image=image.repository,
-                        tag=tag.name,
-                        reason=f"Exceeds max tags per repo ({policy.global_max_tags_per_repo})",
-                        action=PolicyAction.WARN,
-                        size_mb=tag.size_mb,
-                        age_days=tag.age_days,
-                        severity=CleanupSeverity.LOW,
-                    ))
+                    candidates.append(
+                        CleanupCandidate(
+                            image=image.repository,
+                            tag=tag.name,
+                            reason=f"Exceeds max tags per repo ({policy.global_max_tags_per_repo})",
+                            action=PolicyAction.WARN,
+                            size_mb=tag.size_mb,
+                            age_days=tag.age_days,
+                            severity=CleanupSeverity.LOW,
+                        )
+                    )
 
     return candidates
 
 
 def _is_protected(tag: ImageTag, protected_patterns: list[str]) -> bool:
     """Check if a tag matches any protected pattern."""
-    for pattern in protected_patterns:
-        if re.match(pattern, tag.name):
-            return True
-    return False
+    return any(re.match(pattern, tag.name) for pattern in protected_patterns)
 
 
 def _calculate_severity(tag: ImageTag, image: Image) -> CleanupSeverity:

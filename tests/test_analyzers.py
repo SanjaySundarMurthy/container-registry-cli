@@ -24,12 +24,14 @@ class TestCleanupEngine:
     def test_protected_tags_skipped(self):
         img = Image(
             repository="test/app",
-            tags=[ImageTag(
-                name="latest",
-                digest="sha256:x",
-                created_at=datetime.now() - timedelta(days=200),
-                size_bytes=100,
-            )],
+            tags=[
+                ImageTag(
+                    name="latest",
+                    digest="sha256:x",
+                    created_at=datetime.now() - timedelta(days=200),
+                    size_bytes=100,
+                )
+            ],
         )
         policy = PolicyConfig(protected_tags=["latest"], global_max_age_days=90)
         candidates = evaluate_cleanup([img], policy)
@@ -73,9 +75,9 @@ class TestVulnScanner:
     def test_no_scan_data_flagged(self):
         img = Image(
             repository="test/noscan",
-            tags=[ImageTag(
-                name="v1", digest="sha256:x", created_at=datetime.now(), size_bytes=100
-            )],
+            tags=[
+                ImageTag(name="v1", digest="sha256:x", created_at=datetime.now(), size_bytes=100)
+            ],
             labels={"user": "appuser"},
         )
         report = scan_images([img])
@@ -85,9 +87,9 @@ class TestVulnScanner:
     def test_root_user_flagged(self):
         img = Image(
             repository="test/root",
-            tags=[ImageTag(
-                name="v1", digest="sha256:x", created_at=datetime.now(), size_bytes=100
-            )],
+            tags=[
+                ImageTag(name="v1", digest="sha256:x", created_at=datetime.now(), size_bytes=100)
+            ],
             labels={"scanned": "true"},  # no 'user' label
         )
         report = scan_images([img])
@@ -97,9 +99,9 @@ class TestVulnScanner:
     def test_non_root_user_not_flagged(self):
         img = Image(
             repository="test/nonroot",
-            tags=[ImageTag(
-                name="v1", digest="sha256:x", created_at=datetime.now(), size_bytes=100
-            )],
+            tags=[
+                ImageTag(name="v1", digest="sha256:x", created_at=datetime.now(), size_bytes=100)
+            ],
             labels={"scanned": "true", "user": "appuser"},
         )
         report = scan_images([img])
@@ -126,12 +128,14 @@ class TestVulnScanner:
     def test_large_image_flagged(self):
         img = Image(
             repository="test/big",
-            tags=[ImageTag(
-                name="v1",
-                digest="sha256:x",
-                created_at=datetime.now(),
-                size_bytes=629_145_600,
-            )],
+            tags=[
+                ImageTag(
+                    name="v1",
+                    digest="sha256:x",
+                    created_at=datetime.now(),
+                    size_bytes=629_145_600,
+                )
+            ],
             labels={"scanned": "true", "user": "appuser"},
         )
         report = scan_images([img], size_threshold_mb=500.0)

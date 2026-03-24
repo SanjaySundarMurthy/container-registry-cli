@@ -56,105 +56,126 @@ def scan_images(images: list[Image], size_threshold_mb: float = 500.0) -> Securi
         # REG-001: Critical vulns
         crit = image.critical_vulns
         if crit > 0:
-            issues.append(SecurityIssue(
-                rule_id="REG-001",
-                message=f"{crit} critical vulnerabilities found",
-                severity=VulnerabilitySeverity.CRITICAL,
-                image=image.repository,
-            ))
+            issues.append(
+                SecurityIssue(
+                    rule_id="REG-001",
+                    message=f"{crit} critical vulnerabilities found",
+                    severity=VulnerabilitySeverity.CRITICAL,
+                    image=image.repository,
+                )
+            )
 
         # REG-002: High vulns with fixes
         high_fixable = sum(
-            1 for v in image.vulnerabilities
+            1
+            for v in image.vulnerabilities
             if v.severity == VulnerabilitySeverity.HIGH and v.is_fixable
         )
         if high_fixable > 0:
-            issues.append(SecurityIssue(
-                rule_id="REG-002",
-                message=f"{high_fixable} high vulnerabilities with available fixes",
-                severity=VulnerabilitySeverity.HIGH,
-                image=image.repository,
-            ))
+            issues.append(
+                SecurityIssue(
+                    rule_id="REG-002",
+                    message=f"{high_fixable} high vulnerabilities with available fixes",
+                    severity=VulnerabilitySeverity.HIGH,
+                    image=image.repository,
+                )
+            )
 
         # REG-003: Deprecated base tags
-        deprecated_labels = ['deprecated', 'eol', 'end-of-life']
+        deprecated_labels = ["deprecated", "eol", "end-of-life"]
         for label_key, label_val in image.labels.items():
             if any(d in str(label_val).lower() for d in deprecated_labels):
-                issues.append(SecurityIssue(
-                    rule_id="REG-003",
-                    message="Image uses deprecated base",
-                    severity=VulnerabilitySeverity.MEDIUM,
-                    image=image.repository,
-                    details=f"{label_key}={label_val}",
-                ))
+                issues.append(
+                    SecurityIssue(
+                        rule_id="REG-003",
+                        message="Image uses deprecated base",
+                        severity=VulnerabilitySeverity.MEDIUM,
+                        image=image.repository,
+                        details=f"{label_key}={label_val}",
+                    )
+                )
                 break
 
         # REG-004: No scan data
-        if not image.vulnerabilities and not image.labels.get('scanned'):
-            issues.append(SecurityIssue(
-                rule_id="REG-004",
-                message="No vulnerability scan data available",
-                severity=VulnerabilitySeverity.MEDIUM,
-                image=image.repository,
-            ))
+        if not image.vulnerabilities and not image.labels.get("scanned"):
+            issues.append(
+                SecurityIssue(
+                    rule_id="REG-004",
+                    message="No vulnerability scan data available",
+                    severity=VulnerabilitySeverity.MEDIUM,
+                    image=image.repository,
+                )
+            )
 
         # REG-006: Excessive layers
         if len(image.layers) > 15:
-            issues.append(SecurityIssue(
-                rule_id="REG-006",
-                message=f"Image has {len(image.layers)} layers (>15)",
-                severity=VulnerabilitySeverity.LOW,
-                image=image.repository,
-            ))
+            issues.append(
+                SecurityIssue(
+                    rule_id="REG-006",
+                    message=f"Image has {len(image.layers)} layers (>15)",
+                    severity=VulnerabilitySeverity.LOW,
+                    image=image.repository,
+                )
+            )
 
         # REG-007: Size threshold
         if image.total_size_mb > size_threshold_mb:
-            issues.append(SecurityIssue(
-                rule_id="REG-007",
-                message=f"Image size {image.total_size_mb:.1f}MB exceeds {size_threshold_mb}MB",
-                severity=VulnerabilitySeverity.LOW,
-                image=image.repository,
-            ))
+            issues.append(
+                SecurityIssue(
+                    rule_id="REG-007",
+                    message=f"Image size {image.total_size_mb:.1f}MB exceeds {size_threshold_mb}MB",
+                    severity=VulnerabilitySeverity.LOW,
+                    image=image.repository,
+                )
+            )
 
         # REG-008: Untagged manifests
         untagged = sum(1 for t in image.tags if t.name == "" or t.name.startswith("sha256:"))
         if untagged > 0:
-            issues.append(SecurityIssue(
-                rule_id="REG-008",
-                message=f"{untagged} untagged manifests found",
-                severity=VulnerabilitySeverity.LOW,
-                image=image.repository,
-            ))
+            issues.append(
+                SecurityIssue(
+                    rule_id="REG-008",
+                    message=f"{untagged} untagged manifests found",
+                    severity=VulnerabilitySeverity.LOW,
+                    image=image.repository,
+                )
+            )
 
         # REG-009: Latest tag
         has_latest = any(t.name == "latest" for t in image.tags)
-        if has_latest and image.labels.get('environment') == 'production':
-            issues.append(SecurityIssue(
-                rule_id="REG-009",
-                message="'latest' tag used in production",
-                severity=VulnerabilitySeverity.HIGH,
-                image=image.repository,
-            ))
+        if has_latest and image.labels.get("environment") == "production":
+            issues.append(
+                SecurityIssue(
+                    rule_id="REG-009",
+                    message="'latest' tag used in production",
+                    severity=VulnerabilitySeverity.HIGH,
+                    image=image.repository,
+                )
+            )
 
         # REG-005: Running as root
         user_label = image.labels.get("user", "").lower()
         if user_label in ("", "root", "0"):
-            issues.append(SecurityIssue(
-                rule_id="REG-005",
-                message="Image may run as root (no non-root USER configured)",
-                severity=VulnerabilitySeverity.MEDIUM,
-                image=image.repository,
-            ))
+            issues.append(
+                SecurityIssue(
+                    rule_id="REG-005",
+                    message="Image may run as root (no non-root USER configured)",
+                    severity=VulnerabilitySeverity.MEDIUM,
+                    image=image.repository,
+                )
+            )
 
         # REG-010: Stale tags
         stale = sum(1 for t in image.tags if t.age_days > 180)
         if stale > 0:
-            issues.append(SecurityIssue(
-                rule_id="REG-010",
-                message=f"{stale} tags older than 180 days",
-                severity=VulnerabilitySeverity.LOW,
-                image=image.repository,
-            ))
+            issues.append(
+                SecurityIssue(
+                    rule_id="REG-010",
+                    message=f"{stale} tags older than 180 days",
+                    severity=VulnerabilitySeverity.LOW,
+                    image=image.repository,
+                )
+            )
 
     return SecurityReport(
         issues=issues,

@@ -77,12 +77,14 @@ def sample_image(sample_tag, stale_tag, sample_vuln):
 def clean_image():
     return Image(
         repository="myapp/frontend",
-        tags=[ImageTag(
-            name="v2.0.0",
-            digest="sha256:clean01",
-            created_at=datetime.now() - timedelta(days=5),
-            size_bytes=52428800,
-        )],
+        tags=[
+            ImageTag(
+                name="v2.0.0",
+                digest="sha256:clean01",
+                created_at=datetime.now() - timedelta(days=5),
+                size_bytes=52428800,
+            )
+        ],
         vulnerabilities=[],
         labels={"team": "frontend", "scanned": "true", "user": "appuser"},
     )
@@ -115,4 +117,5 @@ def sample_policy():
 @pytest.fixture
 def demo_dir(tmp_path):
     from container_registry_cli.demo import create_demo_project
+
     return create_demo_project(str(tmp_path / "demo"))

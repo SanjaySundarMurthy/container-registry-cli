@@ -57,9 +57,12 @@ def export_json(report: RegistryReport, security: SecurityReport, output_path: s
             "reclaimable_mb": report.reclaimable_size_mb,
             "items": [
                 {
-                    "image": c.image, "tag": c.tag,
-                    "action": c.action.value, "reason": c.reason,
-                    "size_mb": c.size_mb, "age_days": c.age_days,
+                    "image": c.image,
+                    "tag": c.tag,
+                    "action": c.action.value,
+                    "reason": c.reason,
+                    "size_mb": c.size_mb,
+                    "age_days": c.age_days,
                 }
                 for c in report.cleanup_candidates
             ],
@@ -68,7 +71,7 @@ def export_json(report: RegistryReport, security: SecurityReport, output_path: s
 
     path = Path(output_path)
     path.parent.mkdir(parents=True, exist_ok=True)
-    path.write_text(json.dumps(data, indent=2), encoding='utf-8')
+    path.write_text(json.dumps(data, indent=2), encoding="utf-8")
     return str(path)
 
 
@@ -125,5 +128,5 @@ def export_html(report: RegistryReport, security: SecurityReport, output_path: s
 </body>
 </html>"""
 
-    path.write_text(html, encoding='utf-8')
+    path.write_text(html, encoding="utf-8")
     return str(path)
