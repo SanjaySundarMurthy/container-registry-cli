@@ -8,6 +8,7 @@ on:
 
 permissions:
   contents: read
+  packages: write
   security-events: write
 
 jobs:
@@ -126,7 +127,7 @@ jobs:
   publish:
     needs: [lint, test, security]
     runs-on: ubuntu-latest
-    if: github.event_name == 'push' && (github.ref == 'refs/heads/main' || github.ref == 'refs/heads/master')
+    if: github.event_name == 'push' && (github.ref == 'refs/heads/main' || github.ref == 'refs/heads/master') && vars.ENABLE_PYPI_PUBLISH == 'true'
     steps:
       - uses: actions/checkout@v4
 
